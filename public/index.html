@@ -1,1 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="What Next Breaking news intelligence">
+  <meta property="og:url" content="https://whatnext.nota.deno.net">
+  <meta property="og:title" content="What Next">
+  <meta property="og:description" content="What Next Breaking news intelligence">
+  <title>What Next</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --border: #222;
+      --text: #ccc;
+      --muted: #777;
+      --accent: #e8ff00;
+      --red: #f04040;
+      --green: #2ecc71;
+      --orange: #f39c12;
+      --blue: #08f;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 36px 20px 80px;
+    }
+
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 18px;
+      margin-bottom: 26px;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    h1 span {
+      color: var(--accent);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    #clock {
+      font-size: 12px;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 14px;
+    }
+
+    .field.grow {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    label {
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    select,
+    input[type=text],
+    textarea {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      padding: 7px 10px;
+      outline: none;
+      width: 100%;
+    }
+
+    select {
+      cursor: pointer;
+      max-width: 400px;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      border-color: #444;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 52px;
+    }
+
+    ::placeholder {
+      color: var(--muted);
+    }
+
+    .controls-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .toggle-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .toggle-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 5px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: system-ui, sans-serif;
+    }
+
+    .toggle-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--bg);
+    }
+
+    .inputs-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 700px) {
+      .controls-row {
+        grid-template-columns: 1fr;
+      }
+      .inputs-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .run-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 24px;
+    }
+
+    .run-btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 9px 28px;
+      cursor: pointer;
+    }
+
+    .run-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .agent-log {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      margin-bottom: 20px;
+      font-size: 12px;
+      font-family: monospace;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .agent-log.visible {
+      display: block;
+    }
+
+    .log-line {
+      padding: 1px 0;
+    }
+
+    .log-line.status {
+      color: var(--muted);
+    }
+
+    .log-line.search {
+      color: var(--blue);
+    }
+
+    .log-line.done {
+      color: var(--green);
+    }
+
+    .log-line.error {
+      color: var(--red);
+    }
+
+    .error-msg {
+      color: var(--red);
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    .section-label {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      margin-top: 24px;
+    }
+
+    /* Prediction cards */
+    .pred-card {
+      border-left: 2px solid var(--border);
+      padding: 14px 18px;
+      margin-bottom: 2px;
+      background: var(--surface);
+    }
+
+    .pred-card.high {
+      border-left-color: var(--accent);
+    }
+
+    .pred-card.medium {
+      border-left-color: var(--blue);
+    }
+
+    .pred-card.low {
+      border-left-color: var(--muted);
+    }
+
+    .pred-card.risk {
+      border-left-color: var(--red);
+    }
+
+    .pred-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .pred-title {
+      font-weight: 700;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .pred-body {
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .pred-signals {
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+
+    /* Sources */
+    .source-item {
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .source-item:last-child {
+      border-bottom: none;
+    }
+
+    .timestamp {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <header>
+      <div class="header-row">
+        <div>
+          <h1>WHAT <span>NEXT</span></h1>
+          <div class="subtitle">Breaking news intelligence</div>
+        </div>
+        <div id="clock"></div>
+      </div>
+    </header>
+
+    <div class="desc">
+      Agent searches breaking news across selected domains, reasons over multiple rounds using Tavily for recency and
+      Exa for depth, and produces forward-looking predictions grounded in current events.
+    </div>
+
+    <div class="field">
+      <label>Model</label>
+      <select id="modelSelect">
+        <option value="openai/gpt-oss-120b:free">openai/gpt-oss-120b (free)</option>
+        <option value="z-ai/glm-4.5-air:free">z-ai/glm-4.5-air (free)</option>
+        <option value="nvidia/nemotron-3-super-120b-a12b:free">nvidia/nemotron-3-super-120b-a12b (free)</option>
+        <option value="qwen/qwen3-coder:free">qwen/qwen3-coder (free)</option>
+        <option value="liquid/lfm-2.5-1.2b-thinking:free">liquid/lfm-2.5-1.2b-thinking (free)</option>
+      </select>
+    </div>
+
+    <div class="controls-row">
+      <div class="field">
+        <label>Domains</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-group="domain" data-value="geopolitical">Geopolitical</button>
+          <button class="toggle-btn active" data-group="domain" data-value="financial">Financial</button>
+          <button class="toggle-btn active" data-group="domain" data-value="tech">Tech</button>
+          <button class="toggle-btn active" data-group="domain" data-value="crypto">Crypto</button>
+          <button class="toggle-btn active" data-group="domain" data-value="ai">AI</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Mode</label>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-group="mode" data-value="scan">Scan</button>
+          <button class="toggle-btn" data-group="mode" data-value="focus">Focus</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="inputs-row">
+      <div class="field">
+        <label>Topics / Regions <span
+            style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></label>
+        <input type="text" id="topicsInput" placeholder="e.g. US-China trade, Fed policy, Nvidia">
+      </div>
+      <div class="field">
+        <label>Question <span
+            style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--muted)">(optional)</span></label>
+        <textarea id="questionInput" placeholder="e.g. What happens to oil if Iran escalates?"></textarea>
+      </div>
+    </div>
+
+    <div class="run-row">
+      <button class="run-btn" id="runBtn" onclick="run()">ANALYZE →</button>
+    </div>
+
+    <div class="agent-log" id="agentLog"></div>
+    <div class="error-msg" id="errorBox"></div>
+
+    <div id="output">
+      <div id="predLabel" class="section-label" style="display:none">Predictions</div>
+      <div id="predictionsContainer"></div>
+      <div id="srcLabel" class="section-label" style="display:none">Sources</div>
+      <div id="sourcesContainer"></div>
+      <div class="timestamp" id="timestamp"></div>
+    </div>
+
+  </div>
+  <script>
+    // ── Clock ─────────────────────────────────────────────────────────────────────
+    function updateClock() { document.getElementById('clock').textContent = new Date().toUTCString().replace('GMT', 'UTC'); }
+    updateClock(); setInterval(updateClock, 1000);
+
+    // ── Toggles ───────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const group = btn.dataset.group;
+        if (group === 'domain') { btn.classList.toggle('active'); }
+        else {
+          document.querySelectorAll(`[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
+      });
+    });
+
+    function getActive(group) { return [...document.querySelectorAll(`.toggle-btn.active[data-group="${group}"]`)].map(b => b.dataset.value); }
+    function getSingle(group) { return document.querySelector(`.toggle-btn.active[data-group="${group}"]`)?.dataset.value ?? ''; }
+
+    // ── Log ───────────────────────────────────────────────────────────────────────
+    const logEl = document.getElementById('agentLog');
+    function log(text, cls = 'status') {
+      const d = document.createElement('div');
+      d.className = `log-line ${cls}`; d.textContent = text;
+      logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight;
+    }
+    function clearLog() { logEl.innerHTML = ''; logEl.classList.add('visible'); }
+    function showError(msg) {
+      const b = document.getElementById('errorBox');
+      b.textContent = 'Error: ' + msg; b.classList.add('visible');
+    }
+
+    // ── Run ───────────────────────────────────────────────────────────────────────
+    async function run() {
+      const domains = getActive('domain');
+      const mode = getSingle('mode');
+      const topics = document.getElementById('topicsInput').value.trim();
+      const question = document.getElementById('questionInput').value.trim();
+      const model = document.getElementById('modelSelect').value;
+
+      if (!domains.length) return alert('Select at least one domain.');
+
+      const btn = document.getElementById('runBtn');
+      btn.disabled = true;
+      document.getElementById('errorBox').classList.remove('visible');
+      document.getElementById('predictionsContainer').innerHTML = '';
+      document.getElementById('sourcesContainer').innerHTML = '';
+      document.getElementById('timestamp').textContent = '';
+      document.getElementById('predLabel').style.display = 'none';
+      document.getElementById('srcLabel').style.display = 'none';
+      clearLog();
+
+      log(`Mode: ${mode} · Domains: ${domains.join(', ')}`);
+      if (topics) log(`Topics: ${topics}`);
+      if (question) log(`Question: ${question}`);
+
+      try {
+        const res = await fetch('/api/predictions', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ model, domains, topics, mode, question }),
+        });
+        if (!res.ok) throw new Error(`Server ${res.status}`);
+
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split('\n'); buf = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            handleEvent(JSON.parse(line.slice(6)));
+          }
+        }
+      } catch (e) { showError(e.message); }
+      finally { btn.disabled = false; }
+    }
+
+    function handleEvent(ev) {
+      if (ev.type === 'status') { log('› ' + ev.data); }
+      else if (ev.type === 'search_plan') { ev.data.queries.forEach(q => log(`[r${ev.data.round}] ↗ ${q.query}`, 'search')); }
+      else if (ev.type === 'search_done') { log(`[r${ev.data.round}] ${ev.data.total} articles`, 'done'); }
+      else if (ev.type === 'result') { renderResult(ev.data); }
+      else if (ev.type === 'error') { showError(ev.data); log('✗ ' + ev.data, 'error'); }
+    }
+
+    function renderResult(result) {
+      const pEl = document.getElementById('predictionsContainer');
+      const sEl = document.getElementById('sourcesContainer');
+
+      (result.predictions || []).forEach(p => {
+        const card = document.createElement('div');
+        card.className = `pred-card ${(p.confidence || 'medium').toLowerCase()}`;
+        card.innerHTML = `
+        <div class="pred-meta">
+          <span>${p.domain || ''}</span>
+          <span>${p.confidence || ''}</span>
+        </div>
+        <div class="pred-title">${p.title || ''}</div>
+        <div class="pred-body">${p.body || ''}</div>
+        ${p.signals ? `<div class="pred-signals">Signals: ${p.signals}</div>` : ''}
+      `;
+        pEl.appendChild(card);
+      });
+
+      (result.sources || []).forEach(src => {
+        const item = document.createElement('div');
+        item.className = 'source-item'; item.textContent = src;
+        sEl.appendChild(item);
+      });
+
+      if (result.searchLog?.length) {
+        const rounds = new Set(result.searchLog.map(s => s.round)).size;
+        log(`✓ ${rounds} round(s), ${result.searchLog.length} queries`, 'done');
+      }
+
+      document.getElementById('timestamp').textContent = `Generated ${new Date().toUTCString()}`;
+      document.getElementById('predLabel').style.display = 'block';
+      document.getElementById('srcLabel').style.display = 'block';
+      document.getElementById('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  </script>
+</body>
+
+</html>
